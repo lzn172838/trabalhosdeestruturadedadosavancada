@@ -1,22 +1,23 @@
+package br.com.arvore.model;
+
 public class ArvoreBinBusca {
 
-    public class No {
-        public int valor;
-        public No esquerda;
-        public No direita;
+    // O Nó interno implementa a interface pública de leitura,
+    private class No implements INoArvore {
+        private int valor;
+        private No esquerda;
+        private No direita;
 
         public No(int valor) {
             this.valor = valor;
-            this.esquerda = null;
-            this.direita = null;
         }
+
+        @Override public int getValor() { return valor; }
+        @Override public INoArvore getEsquerda() { return esquerda; }
+        @Override public INoArvore getDireita() { return direita; }
     }
 
     private No raiz;
-
-    public ArvoreBinBusca() {
-        this.raiz = null;
-    }
 
     public void inserir(int valor) {
         raiz = inserirRec(raiz, valor);
@@ -34,7 +35,8 @@ public class ArvoreBinBusca {
         return atual;
     }
 
-    public No getRaiz() {
+    // Expondo apenas a interface de visualização
+    public INoArvore getRaizView() {
         return raiz;
     }
 }
