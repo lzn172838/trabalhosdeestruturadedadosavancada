@@ -1,175 +1,212 @@
-
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
+import java.io.*;
 
+// Painel responsável por desenhar a árvore graficamente
 class PainelDesenhoArvore extends JPanel {
     private ArvoreBinBusca arvore;
-    private final int RAIO_NO = 15;
-    private final int ESPACO_VERTICAL = 70;
-    private final int ESPACO_HORIZONTAL_INICIAL = 80;
-    private final int LARGURA_MINIMA = 1000;
-    private final int ALTURA_MINIMA = 600;
+    private final int RAIO = 15;
+    private final int ESPACO_V = 70;
 
     public PainelDesenhoArvore(ArvoreBinBusca arvore) {
         this.arvore = arvore;
         setBackground(Color.WHITE);
-        setPreferredSize(new Dimension(LARGURA_MINIMA, ALTURA_MINIMA));
+        setPreferredSize(new Dimension(1000, 500));
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        if (arvore.getRaiz() == null) return;
 
-        if (arvore.getRaiz() != null) {
-            // Calcula a altura e largura necessárias
-            int profundidade = calcularProfundidade(arvore.getRaiz());
-            int altura = profundidade * ESPACO_VERTICAL + 100;
-            int largura = calcularLarguraNecessaria(profundidade);
-            
-            // Atualiza o tamanho preferido
-            int preferredW = Math.max(largura, LARGURA_MINIMA);
-            int preferredH = Math.max(altura, ALTURA_MINIMA);
-            setPreferredSize(new Dimension(preferredW, preferredH));
-            revalidate();
+        Graphics2D g2 = (Graphics2D) g;
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-            // Use o centro visível do viewport quando o conteúdo for maior que a viewport
-            Rectangle vis = getVisibleRect();
-            int centerX;
-            if (getPreferredSize().width > vis.width) {
-                centerX = vis.x + vis.width / 2;
-            } else {
-                centerX = getPreferredSize().width / 2;
-            }
-            int startY = 40;
+        int altura = arvore.alturaArvore() + 1;
+        int largura = (int) Math.pow(2, altura) * 80 + 150;
+        setPreferredSize(new Dimension(Math.max(largura, 1000), Math.max(altura * ESPACO_V + 100, 500)));
+        revalidate();
 
-            // Calcula um espaçamento horizontal inicial baseado na largura total e profundidade
-            int espacoInicial = Math.max(ESPACO_HORIZONTAL_INICIAL,
-                    Math.max(25, getPreferredSize().width / (int) Math.pow(2, Math.max(1, profundidade))));
+        Rectangle vis = getVisibleRect();
+        int centroX = vis.x + vis.width / 2;
+        int espacoInicial = Math.max(80, largura / (int) Math.pow(2, Math.max(1, altura)));
 
-            desenharArvore(g2d, arvore.getRaiz(), centerX, startY, espacoInicial);
-        }
+        desenhar(g2, arvore.getRaiz(), centroX, 40, espacoInicial);
     }
 
-    private int calcularProfundidade(ArvoreBinBusca.No no) {
-        if (no == null) {
-            return 0;
-        }
-        return 1 + Math.max(calcularProfundidade(no.esquerda), calcularProfundidade(no.direita));
-    }
+    private void desenhar(Graphics2D g, ArvoreBinBusca.No no, int x, int y, int espaco) {
+        espaco = Math.max(espaco, 25);
 
-    private int calcularLarguraNecessaria(int profundidade) {
-        return (int) Math.pow(2, profundidade) * 80 + 150;
-    }
-
-    private void desenharArvore(Graphics2D g, ArvoreBinBusca.No no, int x, int y, int espacoHorizontal) {
-        // Garante que o espaço horizontal não fique muito pequeno
-        espacoHorizontal = Math.max(espacoHorizontal, 25);
-
-        // Desenha lado esquerdo
         if (no.esquerda != null) {
             g.setColor(Color.BLACK);
             g.setStroke(new BasicStroke(2));
-            g.drawLine(x, y, x - espacoHorizontal, y + ESPACO_VERTICAL);
-            desenharArvore(g, no.esquerda, x - espacoHorizontal, y + ESPACO_VERTICAL, espacoHorizontal / 2);
+            g.drawLine(x, y, x - espaco, y + ESPACO_V);
+            desenhar(g, no.esquerda, x - espaco, y + ESPACO_V, espaco / 2);
         }
-
-        // Desenha lado direito
         if (no.direita != null) {
             g.setColor(Color.BLACK);
             g.setStroke(new BasicStroke(2));
-            g.drawLine(x, y, x + espacoHorizontal, y + ESPACO_VERTICAL);
-            desenharArvore(g, no.direita, x + espacoHorizontal, y + ESPACO_VERTICAL, espacoHorizontal / 2);
+            g.drawLine(x, y, x + espaco, y + ESPACO_V);
+            desenhar(g, no.direita, x + espaco, y + ESPACO_V, espaco / 2);
         }
 
-        // Desenha o nó
+        // Desenha o círculo do nó
         g.setColor(Color.WHITE);
-        g.fillOval(x - RAIO_NO, y - RAIO_NO, 2 * RAIO_NO, 2 * RAIO_NO);
+        g.fillOval(x - RAIO, y - RAIO, 2 * RAIO, 2 * RAIO);
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(2));
-        g.drawOval(x - RAIO_NO, y - RAIO_NO, 2 * RAIO_NO, 2 * RAIO_NO);
+        g.drawOval(x - RAIO, y - RAIO, 2 * RAIO, 2 * RAIO);
 
-        // Desenha o número no centro
-        String textoValor = String.valueOf(no.valor);
+        // Desenha o valor dentro do círculo
+        String txt = String.valueOf(no.valor);
         FontMetrics fm = g.getFontMetrics();
-        int larguraTexto = fm.stringWidth(textoValor);
-        int alturaTexto = fm.getAscent();
-        g.setColor(Color.BLACK);
-        g.drawString(textoValor, x - (larguraTexto / 2), y + (alturaTexto / 4));
+        g.drawString(txt, x - fm.stringWidth(txt) / 2, y + fm.getAscent() / 4);
     }
 }
 
 
 public class AplicacaoArvore extends JFrame {
-    
-    private ArvoreBinBusca arvore;
+
+    private ArvoreBinBusca arvore = new ArvoreBinBusca();
     private JTextField campoEntrada;
     private PainelDesenhoArvore painelDesenho;
+    private JTextArea areaInfo;
 
     public AplicacaoArvore() {
-        arvore = new ArvoreBinBusca();
-
-        setTitle("Visão Gráfica da Árvore Binária de Busca");
-        setSize(800, 600);
+        setTitle("Arvore Binaria de Busca");
+        setSize(950, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(5, 5));
 
-        // leitor do input
-        JPanel painelTopo = new JPanel();
-        painelTopo.add(new JLabel("Digite um número:"));
-        
-        campoEntrada = new JTextField(10);
-        painelTopo.add(campoEntrada);
-        
-        JButton botaoInserir = new JButton("Inserir na Árvore");
-        painelTopo.add(botaoInserir);
+        // ---- Painel de botões (topo) ----
+        JPanel topo = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        topo.add(new JLabel("Numero:"));
+        campoEntrada = new JTextField(8);
+        topo.add(campoEntrada);
 
-        
+        JButton btnInserir = new JButton("Inserir");
+        JButton btnLimpar  = new JButton("Limpar Tela");
+        JButton btnSalvar  = new JButton("Salvar TXT");
+        topo.add(btnInserir);
+        topo.add(btnLimpar);
+        topo.add(btnSalvar);
+        add(topo, BorderLayout.NORTH);
+
+        // ---- Área de desenho da árvore (centro) ----
         painelDesenho = new PainelDesenhoArvore(arvore);
-        JScrollPane scrollPane = new JScrollPane(painelDesenho);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        
-        add(painelTopo, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        JScrollPane scrollDesenho = new JScrollPane(painelDesenho);
+        add(scrollDesenho, BorderLayout.CENTER);
 
-        ActionListener acaoInserir = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                adicionarElemento();
-            }
-        };
-        botaoInserir.addActionListener(acaoInserir);
-        campoEntrada.addActionListener(acaoInserir);
+        // ---- Área de informações (baixo) ----
+        areaInfo = new JTextArea(10, 40);
+        areaInfo.setEditable(false);
+        areaInfo.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        JScrollPane scrollInfo = new JScrollPane(areaInfo);
+        scrollInfo.setBorder(BorderFactory.createTitledBorder("Informacoes da Arvore"));
+        scrollInfo.setPreferredSize(new Dimension(950, 230));
+        add(scrollInfo, BorderLayout.SOUTH);
+
+        // ---- Ações dos botões ----
+        btnInserir.addActionListener(e -> inserir());
+        campoEntrada.addActionListener(e -> inserir());
+
+        btnLimpar.addActionListener(e -> {
+            arvore.limpar();
+            painelDesenho.repaint();
+            atualizarInfo();
+        });
+
+        btnSalvar.addActionListener(e -> salvar());
+
+        atualizarInfo();
     }
 
-    private void adicionarElemento() {
+    private void inserir() {
         try {
-            String texto = campoEntrada.getText().trim();
-            if (!texto.isEmpty()) {
-                int valor = Integer.parseInt(texto);
-                arvore.inserir(valor); // Usa o metodo de inserçao do outro arquivo
-                painelDesenho.repaint(); 
-                campoEntrada.setText("");
-                campoEntrada.requestFocus();
-            }
+            String txt = campoEntrada.getText().trim();
+            if (txt.isEmpty()) return;
+            arvore.inserir(Integer.parseInt(txt));
+            campoEntrada.setText("");
+            campoEntrada.requestFocus();
+            painelDesenho.repaint();
+            atualizarInfo();
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Por favor, digite apenas números inteiros válidos.", "Erro", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Digite um numero inteiro valido!", "Erro", JOptionPane.ERROR_MESSAGE);
             campoEntrada.setText("");
         }
     }
 
+    // Monta o texto com todas as informações da árvore
+    private void atualizarInfo() {
+        if (arvore.getRaiz() == null) {
+            areaInfo.setText("  (arvore vazia)");
+            return;
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Parenteses Aninhados : ").append(arvore.parentesesAninhados()).append("\n\n");
+
+        sb.append("Percursos:\n");
+        sb.append("  Pre-Ordem  (Raiz-Esq-Dir): ").append(arvore.preOrdem()).append("\n");
+        sb.append("  Em Ordem   (Esq-Raiz-Dir): ").append(arvore.emOrdem()).append("\n");
+        sb.append("  Pos-Ordem  (Esq-Dir-Raiz): ").append(arvore.posOrdem()).append("\n\n");
+
+        sb.append("Arvore:\n");
+        sb.append("  Altura     : ").append(arvore.alturaArvore()).append("\n");
+        sb.append("  Nivel      : ").append(arvore.nivelArvore()).append("\n");
+        sb.append("  Profundidade: ").append(arvore.profundidadeArvore()).append("\n\n");
+
+        sb.append(String.format("  %-8s  %-8s  %-14s  %-8s%n", "No", "Nivel", "Profundidade", "Altura"));
+        sb.append("  ").append("-".repeat(44)).append("\n");
+        montarTabelaNos(arvore.getRaiz(), 0, sb);
+
+        areaInfo.setText(sb.toString());
+        areaInfo.setCaretPosition(0);
+    }
+
+    // Percorre a árvore em pré-ordem e exibe info de cada nó
+    private void montarTabelaNos(ArvoreBinBusca.No no, int nivel, StringBuilder sb) {
+        if (no == null) return;
+        int altura = arvore.alturaNo(no);
+        sb.append(String.format("  %-8d  %-8d  %-14d  %-8d%n", no.valor, nivel, nivel, altura));
+        montarTabelaNos(no.esquerda, nivel + 1, sb);
+        montarTabelaNos(no.direita,  nivel + 1, sb);
+    }
+
+    // Salva o conteúdo da área de informações em um arquivo TXT
+    private void salvar() {
+        if (arvore.getRaiz() == null) {
+            JOptionPane.showMessageDialog(this, "A arvore esta vazia!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Salvar Arvore");
+        fc.setSelectedFile(new File("arvore.txt"));
+        if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+
+        File arquivo = fc.getSelectedFile();
+        if (!arquivo.getName().endsWith(".txt")) {
+            arquivo = new File(arquivo.getAbsolutePath() + ".txt");
+        }
+
+        try (FileWriter fw = new FileWriter(arquivo)) {
+            fw.write("ARVORE BINARIA DE BUSCA\n");
+            fw.write("=".repeat(50) + "\n\n");
+            fw.write(areaInfo.getText());
+            JOptionPane.showMessageDialog(this, "Salvo em:\n" + arquivo.getAbsolutePath(), "OK", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this, "Erro ao salvar: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                AplicacaoArvore tela = new AplicacaoArvore();
-                tela.setLocationRelativeTo(null);
-                tela.setVisible(true);
-            }
+        SwingUtilities.invokeLater(() -> {
+            AplicacaoArvore app = new AplicacaoArvore();
+            app.setLocationRelativeTo(null);
+            app.setVisible(true);
         });
     }
 }
