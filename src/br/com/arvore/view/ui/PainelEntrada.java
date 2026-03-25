@@ -1,49 +1,47 @@
 package br.com.arvore.view.ui;
 
 import javax.swing.*;
+import java.awt.*;
 import java.util.function.Consumer;
 
 public class PainelEntrada extends JPanel {
-
     private JTextField campoEntrada;
-    private Consumer<Integer> onInserirCallback;
 
-    public PainelEntrada(Consumer<Integer> onInserirCallback) {
-        this.onInserirCallback = onInserirCallback;
-        inicializarComponentes();
-    }
+    // O construtor agora exige 3 parâmetros (um Consumer e dois Runnables)
+    public PainelEntrada(Consumer<Integer> onInserir, Runnable onLimpar, Runnable onSalvar) {
+        setLayout(new FlowLayout(FlowLayout.LEFT));
+        setBorder(BorderFactory.createEtchedBorder());
 
-    private void inicializarComponentes() {
-        add(new JLabel("Digite um número:"));
-
+        add(new JLabel("Inserir Valor:"));
         campoEntrada = new JTextField(10);
         add(campoEntrada);
 
-        JButton botaoInserir = new JButton("Inserir na Árvore");
-        add(botaoInserir);
+        JButton btnInserir = new JButton("Inserir");
+        JButton btnLimpar = new JButton("Limpar Árvore");
+        JButton btnSalvar = new JButton("Exportar TXT");
 
-        botaoInserir.addActionListener(e -> processarEntrada());
-        campoEntrada.addActionListener(e -> processarEntrada());
+        // Configuração dos eventos
+        btnInserir.addActionListener(e -> executarInsercao(onInserir));
+        campoEntrada.addActionListener(e -> executarInsercao(onInserir));
+
+        btnLimpar.addActionListener(e -> onLimpar.run());
+        btnSalvar.addActionListener(e -> onSalvar.run());
+
+        add(btnInserir);
+        add(btnLimpar);
+        add(btnSalvar);
     }
 
-    private void processarEntrada() {
+    private void executarInsercao(Consumer<Integer> callback) {
         try {
             String texto = campoEntrada.getText().trim();
             if (!texto.isEmpty()) {
-                int valor = Integer.parseInt(texto);
-                onInserirCallback.accept(valor);
-                limparCampo();
+                callback.accept(Integer.parseInt(texto));
+                campoEntrada.setText("");
             }
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this,
-                    "Por favor, digite apenas números inteiros válidos.",
-                    "Erro de Entrada", JOptionPane.ERROR_MESSAGE);
-            limparCampo();
+            JOptionPane.showMessageDialog(this, "Digite um número inteiro válido.");
         }
-    }
-
-    private void limparCampo() {
-        campoEntrada.setText("");
         campoEntrada.requestFocus();
     }
 }

@@ -1,45 +1,69 @@
 package br.com.arvore.view.ui;
 
 import br.com.arvore.model.ArvoreBinBusca;
-
+import br.com.arvore.service.ExportadorArquivo;
 import javax.swing.*;
 import java.awt.*;
 
 public class JanelaPrincipal extends JFrame {
+    private final ArvoreBinBusca arvore = new ArvoreBinBusca();
+    private final ExportadorArquivo exportador = new ExportadorArquivo();
 
-    private final ArvoreBinBusca arvore;
-    private final PainelDesenho painelDesenho;
+    // Nomes das variáveis padronizados para evitar erros de "Symbol not found"
+    private final PainelDesenho painelDesenho = new PainelDesenho();
+    private final PainelInformacoes painelInfo = new PainelInformacoes();
 
     public JanelaPrincipal() {
-        this.arvore = new ArvoreBinBusca();
-        this.painelDesenho = new PainelDesenho();
-
         configurarJanela();
         montarLayout();
+        atualizarInterface();
     }
 
     private void configurarJanela() {
-        setTitle("Visão Gráfica da Árvore Binária de Busca");
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setTitle("Árvore Binária de Busca - Sistema Refatorado");
+        setSize(1100, 850);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setLayout(new BorderLayout());
     }
 
     private void montarLayout() {
-        // Passamos um callback: Quando um número for digitado, ele insere na árvore e atualiza o desenho
-        PainelEntrada painelEntrada = new PainelEntrada(this::inserirElemento);
+        setLayout(new BorderLayout(5, 5));
 
-        JScrollPane scrollPane = new JScrollPane(painelDesenho);
-        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+        // Painel de botões (norte)
+        PainelEntrada painelEntrada = new PainelEntrada(
+                this::inserirElemento,
+                this::limparArvore,
+                this::salvarRelatorio
+        );
+
+        // Painel de desenho com Scroll (centro)
+        JScrollPane scrollDesenho = new JScrollPane(painelDesenho);
 
         add(painelEntrada, BorderLayout.NORTH);
-        add(scrollPane, BorderLayout.CENTER);
+        add(scrollDesenho, BorderLayout.CENTER);
+        add(painelInfo, BorderLayout.SOUTH); // Usando a variável padronizada
     }
 
     private void inserirElemento(int valor) {
         arvore.inserir(valor);
-        painelDesenho.atualizarArvore(arvore.getRaizView());
+        atualizarInterface();
+    }
+
+    private void limparArvore() {
+        arvore.limpar();
+        atualizarInterface();
+    }
+
+    private void salvarRelatorio() {
+        // Chama o método que criamos no PainelInformacoes
+        String texto = painelInfo.getTextoRelatorio();
+        exportador.salvarRelatorioTxt(this, texto);
+    }
+
+    private void atualizarInterface() {
+        // Sincroniza os dois painéis com os dados da model
+        painelDesenho.atualizarArvore(arvore.getRaiz());
+        painelInfo.atualizarDados(arvore);
+        repaint();
     }
 }
