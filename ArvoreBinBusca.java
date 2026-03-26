@@ -1,6 +1,5 @@
 public class ArvoreBinBusca {
 
-    // Classe que representa cada nó da árvore
     public class No {
         public int valor;
         public No esquerda;
@@ -19,19 +18,13 @@ public class ArvoreBinBusca {
         this.raiz = null;
     }
 
-    // Retorna a raiz da árvore
     public No getRaiz() {
         return raiz;
     }
 
-    // Limpa a árvore (remove todos os nós)
     public void limpar() {
         raiz = null;
     }
-
-    // ============================================================
-    // INSERÇÃO
-    // ============================================================
 
     public void inserir(int valor) {
         raiz = inserirRec(raiz, valor);
@@ -44,11 +37,6 @@ public class ArvoreBinBusca {
         return atual;
     }
 
-    // ============================================================
-    // PERCURSOS
-    // ============================================================
-
-    // Pré-Ordem: visita Raiz → Esquerda → Direita
     public String preOrdem() {
         StringBuilder sb = new StringBuilder();
         preOrdemRec(raiz, sb);
@@ -61,7 +49,6 @@ public class ArvoreBinBusca {
         preOrdemRec(no.direita, sb);
     }
 
-    // Em Ordem: visita Esquerda → Raiz → Direita (resultado em ordem crescente)
     public String emOrdem() {
         StringBuilder sb = new StringBuilder();
         emOrdemRec(raiz, sb);
@@ -74,7 +61,6 @@ public class ArvoreBinBusca {
         emOrdemRec(no.direita, sb);
     }
 
-    // Pós-Ordem: visita Esquerda → Direita → Raiz
     public String posOrdem() {
         StringBuilder sb = new StringBuilder();
         posOrdemRec(raiz, sb);
@@ -87,10 +73,6 @@ public class ArvoreBinBusca {
         sb.append(no.valor).append(" ");
     }
 
-    // ============================================================
-    // ALTURA  (folha = 0, árvore vazia = -1)
-    // ============================================================
-
     public int alturaNo(No no) {
         if (no == null) return -1;
         return 1 + Math.max(alturaNo(no.esquerda), alturaNo(no.direita));
@@ -99,10 +81,6 @@ public class ArvoreBinBusca {
     public int alturaArvore() {
         return alturaNo(raiz);
     }
-
-    // ============================================================
-    // NÍVEL  (raiz = 0, filhos = 1, netos = 2 ...)
-    // ============================================================
 
     public int nivelNo(int valor) {
         return nivelRec(raiz, valor, 0);
@@ -119,10 +97,6 @@ public class ArvoreBinBusca {
         return alturaArvore(); // nível máximo da árvore = sua altura
     }
 
-    // ============================================================
-    // PROFUNDIDADE  (igual ao nível do nó)
-    // ============================================================
-
     public int profundidadeNo(int valor) {
         return nivelNo(valor);
     }
@@ -130,10 +104,6 @@ public class ArvoreBinBusca {
     public int profundidadeArvore() {
         return alturaArvore();
     }
-
-    // ============================================================
-    // PARÊNTESES ANINHADOS  ex: (50(30()())(70()()))
-    // ============================================================
 
     public String parentesesAninhados() {
         if (raiz == null) return "(vazia)";
