@@ -1,5 +1,7 @@
+
 public class ArvoreBinBusca {
 
+    
     public class No {
         public int valor;
         public No esquerda;
@@ -30,20 +32,28 @@ public class ArvoreBinBusca {
         raiz = inserirRec(raiz, valor);
     }
 
-    private No inserirRec(No atual, int valor) {
-        if (atual == null) return new No(valor);
-        if (valor < atual.valor) atual.esquerda = inserirRec(atual.esquerda, valor);
-        else if (valor > atual.valor) atual.direita = inserirRec(atual.direita, valor);
-        return atual;
+    private No inserirRec(No noAtual, int valor) {
+        if (noAtual == null) {
+            return new No(valor);
+        }
+
+        if (valor < noAtual.valor) {
+            noAtual.esquerda = inserirRec(noAtual.esquerda, valor);
+        } else if (valor > noAtual.valor) {
+            noAtual.direita = inserirRec(noAtual.direita, valor);
+        }
+
+        return noAtual;
     }
 
     public String preOrdem() {
         StringBuilder sb = new StringBuilder();
         preOrdemRec(raiz, sb);
-        return sb.toString().trim();
+        return limparEspacoFinal(sb);
     }
     private void preOrdemRec(No no, StringBuilder sb) {
         if (no == null) return;
+
         sb.append(no.valor).append(" ");
         preOrdemRec(no.esquerda, sb);
         preOrdemRec(no.direita, sb);
@@ -52,10 +62,11 @@ public class ArvoreBinBusca {
     public String emOrdem() {
         StringBuilder sb = new StringBuilder();
         emOrdemRec(raiz, sb);
-        return sb.toString().trim();
+        return limparEspacoFinal(sb);
     }
     private void emOrdemRec(No no, StringBuilder sb) {
         if (no == null) return;
+
         emOrdemRec(no.esquerda, sb);
         sb.append(no.valor).append(" ");
         emOrdemRec(no.direita, sb);
@@ -64,10 +75,11 @@ public class ArvoreBinBusca {
     public String posOrdem() {
         StringBuilder sb = new StringBuilder();
         posOrdemRec(raiz, sb);
-        return sb.toString().trim();
+        return limparEspacoFinal(sb);
     }
     private void posOrdemRec(No no, StringBuilder sb) {
         if (no == null) return;
+
         posOrdemRec(no.esquerda, sb);
         posOrdemRec(no.direita, sb);
         sb.append(no.valor).append(" ");
@@ -111,6 +123,18 @@ public class ArvoreBinBusca {
     }
     private String parentesesRec(No no) {
         if (no == null) return "()";
-        return "(" + no.valor + parentesesRec(no.esquerda) + parentesesRec(no.direita) + ")";
+
+        String esquerda = parentesesRec(no.esquerda);
+        String direita = parentesesRec(no.direita);
+        return "(" + no.valor + esquerda + direita + ")";
+    }
+
+    private String limparEspacoFinal(StringBuilder sb) {
+        int tamanho = sb.length();
+        if (tamanho == 0) return "";
+        if (sb.charAt(tamanho - 1) == ' ') {
+            sb.deleteCharAt(tamanho - 1);
+        }
+        return sb.toString();
     }
 }

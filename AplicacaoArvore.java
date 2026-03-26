@@ -85,12 +85,14 @@ public class AplicacaoArvore extends JFrame {
         campoEntrada = new JTextField(8);
         topo.add(campoEntrada);
 
-        JButton btnInserir = new JButton("Inserir");
-        JButton btnLimpar  = new JButton("Limpar Tela");
-        JButton btnSalvar  = new JButton("Salvar TXT");
+        JButton btnInserir  = new JButton("Inserir");
+        JButton btnLimpar   = new JButton("Limpar Tela");
+        JButton btnSalvar   = new JButton("Salvar TXT");
+        JButton btnCarregar = new JButton("Carregar TXT");
         topo.add(btnInserir);
         topo.add(btnLimpar);
         topo.add(btnSalvar);
+        topo.add(btnCarregar);
         add(topo, BorderLayout.NORTH);
 
         // ---- Área de desenho da árvore (centro) ----
@@ -118,6 +120,7 @@ public class AplicacaoArvore extends JFrame {
         });
 
         btnSalvar.addActionListener(e -> salvar());
+        btnCarregar.addActionListener(e -> carregar());
 
         atualizarInfo();
     }
@@ -199,6 +202,57 @@ public class AplicacaoArvore extends JFrame {
             JOptionPane.showMessageDialog(this, "Salvo em:\n" + arquivo.getAbsolutePath(), "OK", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, "Erro ao salvar: " + ex.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    // Carrega uma árvore a partir de um arquivo TXT salvo anteriormente
+    private void carregar() {
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Carregar Arvore");
+        fc.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Arquivo de texto (*.txt)", "txt"));
+        if (fc.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
+
+        File arquivo = fc.getSelectedFile();
+        try (BufferedReader br = new BufferedReader(new FileReader(arquivo))) {
+            String linha;
+            String preOrdem = null;
+            while ((linha = br.readLine()) != null) {
+                if (linha.trim().startsWith("Pre-Ordem")) {
+                    int idx = linha.indexOf(':');
+                    if (idx >= 0) {
+                        preOrdem = linha.substring(idx + 1).trim();
+                    }
+                    break;
+                }
+            }
+
+            if (preOrdem == null || preOrdem.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                    "Arquivo invalido: linha 'Pre-Ordem' nao encontrada.",
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            arvore.limpar();
+            for (String token : preOrdem.split("\\s+")) {
+                if (!token.isEmpty()) {
+                    arvore.inserir(Integer.parseInt(token));
+                }
+            }
+
+            painelDesenho.repaint();
+            atualizarInfo();
+            JOptionPane.showMessageDialog(this,
+                "Arvore carregada com sucesso!", "OK", JOptionPane.INFORMATION_MESSAGE);
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this,
+                "Erro ao ler valores do arquivo: " + ex.getMessage(),
+                "Erro", JOptionPane.ERROR_MESSAGE);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this,
+                "Erro ao abrir arquivo: " + ex.getMessage(),
+                "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
