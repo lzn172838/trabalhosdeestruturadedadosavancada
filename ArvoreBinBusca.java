@@ -129,6 +129,83 @@ public class ArvoreBinBusca {
         return "(" + no.valor + esquerda + direita + ")";
     }
 
+    // --- Tipo da Árvore ---
+
+    private int contarNos(No no) {
+        if (no == null) return 0;
+        return 1 + contarNos(no.esquerda) + contarNos(no.direita);
+    }
+
+    public boolean isPerfeita() {
+        int h = alturaArvore();
+        int total = contarNos(raiz);
+        return total == (int) Math.pow(2, h + 1) - 1;
+    }
+
+    public boolean isCheia() {
+        return isCheiaRec(raiz);
+    }
+    private boolean isCheiaRec(No no) {
+        if (no == null) return true;
+        if (no.esquerda == null && no.direita == null) return true;
+        if (no.esquerda != null && no.direita != null)
+            return isCheiaRec(no.esquerda) && isCheiaRec(no.direita);
+        return false;
+    }
+
+    public boolean isCompleta() {
+        int total = contarNos(raiz);
+        return isCompletaRec(raiz, 0, total);
+    }
+    private boolean isCompletaRec(No no, int indice, int total) {
+        if (no == null) return true;
+        if (indice >= total) return false;
+        return isCompletaRec(no.esquerda, 2 * indice + 1, total) &&
+               isCompletaRec(no.direita,  2 * indice + 2, total);
+    }
+
+    public boolean isBalanceada() {
+        return alturaBalanceadaRec(raiz) != Integer.MIN_VALUE;
+    }
+    private int alturaBalanceadaRec(No no) {
+        if (no == null) return -1;
+        int esq = alturaBalanceadaRec(no.esquerda);
+        if (esq == Integer.MIN_VALUE) return Integer.MIN_VALUE;
+        int dir = alturaBalanceadaRec(no.direita);
+        if (dir == Integer.MIN_VALUE) return Integer.MIN_VALUE;
+        if (Math.abs(esq - dir) > 1) return Integer.MIN_VALUE;
+        return 1 + Math.max(esq, dir);
+    }
+
+    public boolean isDegeneradaEsquerda() {
+        return isDegEsqRec(raiz);
+    }
+    private boolean isDegEsqRec(No no) {
+        if (no == null) return true;
+        if (no.direita != null) return false;
+        return isDegEsqRec(no.esquerda);
+    }
+
+    public boolean isDegeneradaDireita() {
+        return isDegDirRec(raiz);
+    }
+    private boolean isDegDirRec(No no) {
+        if (no == null) return true;
+        if (no.esquerda != null) return false;
+        return isDegDirRec(no.direita);
+    }
+
+    public String tipoArvore() {
+        if (raiz == null) return "Vazia";
+        if (isPerfeita()) return "Perfeita";
+        if (isDegeneradaEsquerda()) return "Degenerada (inclinada a esquerda)";
+        if (isDegeneradaDireita()) return "Degenerada (inclinada a direita)";
+        if (isCheia()) return "Cheia";
+        if (isCompleta()) return "Completa";
+        if (isBalanceada()) return "Balanceada";
+        return "Binaria de Busca comum";
+    }
+
     private String limparEspacoFinal(StringBuilder sb) {
         int tamanho = sb.length();
         if (tamanho == 0) return "";

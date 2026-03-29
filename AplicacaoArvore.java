@@ -157,6 +157,7 @@ public class AplicacaoArvore extends JFrame {
         sb.append("  Pos-Ordem  (Esq-Dir-Raiz): ").append(arvore.posOrdem()).append("\n\n");
 
         sb.append("Arvore:\n");
+        sb.append("  Tipo       : ").append(arvore.tipoArvore()).append("\n");
         sb.append("  Altura     : ").append(arvore.alturaArvore()).append("\n");
         sb.append("  Nivel      : ").append(arvore.nivelArvore()).append("\n");
         sb.append("  Profundidade: ").append(arvore.profundidadeArvore()).append("\n\n");
