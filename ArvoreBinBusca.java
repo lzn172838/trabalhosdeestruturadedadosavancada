@@ -166,6 +166,18 @@ public class ArvoreBinBusca {
         return "Nao Completa";
     }
 
+    public void inverter() {
+        inverterRec(raiz);
+    }
+    private void inverterRec(No no) {
+        if (no == null) return;
+        No temp = no.esquerda;
+        no.esquerda = no.direita;
+        no.direita = temp;
+        inverterRec(no.esquerda);
+        inverterRec(no.direita);
+    }
+
     private String limparEspacoFinal(StringBuilder sb) {
         int tamanho = sb.length();
         if (tamanho == 0) return "";

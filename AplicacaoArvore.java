@@ -87,10 +87,12 @@ public class AplicacaoArvore extends JFrame {
 
         JButton btnInserir  = new JButton("Inserir");
         JButton btnLimpar   = new JButton("Limpar Tela");
+        JButton btnInverter = new JButton("Inverter");
         JButton btnSalvar   = new JButton("Salvar TXT");
         JButton btnCarregar = new JButton("Carregar TXT");
         topo.add(btnInserir);
         topo.add(btnLimpar);
+        topo.add(btnInverter);
         topo.add(btnSalvar);
         topo.add(btnCarregar);
         add(topo, BorderLayout.NORTH);
@@ -112,6 +114,12 @@ public class AplicacaoArvore extends JFrame {
         // ---- Ações dos botões ----
         btnInserir.addActionListener(e -> inserir());
         campoEntrada.addActionListener(e -> inserir());
+
+        btnInverter.addActionListener(e -> {
+            arvore.inverter();
+            painelDesenho.repaint();
+            atualizarInfo();
+        });
 
         btnLimpar.addActionListener(e -> {
             arvore.limpar();
