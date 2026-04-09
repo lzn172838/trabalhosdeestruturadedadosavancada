@@ -106,7 +106,7 @@ public class ArvoreBinBusca {
     }
 
     public int nivelArvore() {
-        return alturaArvore(); // nível máximo da árvore = sua altura
+        return alturaArvore(); 
     }
 
     public int profundidadeNo(int valor) {
@@ -129,9 +129,6 @@ public class ArvoreBinBusca {
         return "(" + no.valor + esquerda + direita + ")";
     }
 
-    // --- Tipo da Árvore ---
-
-    // Cheia: todas as folhas estão no último nível
     public boolean isCheia() {
         if (raiz == null) return true;
         int altura = alturaArvore();
@@ -145,7 +142,7 @@ public class ArvoreBinBusca {
                isCheiaRec(no.direita,  nivel + 1, altura);
     }
 
-    // Completa: todo nó sem pelo menos uma subárvore deve estar no último ou penúltimo nível
+    
     public boolean isCompleta() {
         if (raiz == null) return true;
         int altura = alturaArvore();
