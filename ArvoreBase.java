@@ -52,6 +52,18 @@ public abstract class ArvoreBase {
         return 0;
     }
 
+    public String ultimaRotacaoAVL() {
+        return "Nao aplicavel";
+    }
+
+    public String rotacaoUsadaNoBalanceamentoAVL() {
+        return "Nao aplicavel";
+    }
+
+    public String pivoBalanceamentoAVL() {
+        return "Nao aplicavel";
+    }
+
     public void balancearAVL() {
         throw new UnsupportedOperationException("Operacao disponivel apenas para AVL.");
     }

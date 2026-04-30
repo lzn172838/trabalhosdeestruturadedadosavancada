@@ -1,6 +1,9 @@
 package trabalhosdeestruturadedadosavancada;
 
 public class ArvoreAVL extends ArvoreBase {
+    private String ultimaRotacao = "Nenhuma";
+    private String rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
+    private String pivoBalanceamento = "Nenhum";
 
     @Override
     public String getNomeTipo() {
@@ -14,20 +17,35 @@ public class ArvoreAVL extends ArvoreBase {
 
     @Override
     public void inserir(int valor) {
-        raiz = inserirBalanceando(raiz, valor);
+        ultimaRotacao = "Nenhuma";
+        rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
+        pivoBalanceamento = "Nenhum";
+        raiz = inserirSemBalancear(raiz, valor);
     }
 
     @Override
     public void rotacaoSimplesEsquerdaRaiz() {
+        ultimaRotacao = "Nenhuma";
+        rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
+        pivoBalanceamento = "Nenhum";
         if (raiz != null && raiz.direita != null) {
+            pivoBalanceamento = String.valueOf(raiz.valor);
             raiz = rotacaoEsquerda(raiz);
+            ultimaRotacao = "Rotacao simples a esquerda";
+            rotacaoUsadaNoBalanceamento = "Rotacao a esquerda";
         }
     }
 
     @Override
     public void rotacaoSimplesDireitaRaiz() {
+        ultimaRotacao = "Nenhuma";
+        rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
+        pivoBalanceamento = "Nenhum";
         if (raiz != null && raiz.esquerda != null) {
+            pivoBalanceamento = String.valueOf(raiz.valor);
             raiz = rotacaoDireita(raiz);
+            ultimaRotacao = "Rotacao simples a direita";
+            rotacaoUsadaNoBalanceamento = "Rotacao a direita";
         }
     }
 
@@ -37,7 +55,25 @@ public class ArvoreAVL extends ArvoreBase {
     }
 
     @Override
+    public String ultimaRotacaoAVL() {
+        return ultimaRotacao;
+    }
+
+    @Override
+    public String rotacaoUsadaNoBalanceamentoAVL() {
+        return rotacaoUsadaNoBalanceamento;
+    }
+
+    @Override
+    public String pivoBalanceamentoAVL() {
+        return pivoBalanceamento;
+    }
+
+    @Override
     public void balancearAVL() {
+        ultimaRotacao = "Nenhuma";
+        rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
+        pivoBalanceamento = "Nenhum";
         raiz = balancearSubarvore(raiz);
     }
 
@@ -56,21 +92,21 @@ public class ArvoreAVL extends ArvoreBase {
         return raiz != null && raiz.esquerda != null;
     }
 
-    private No inserirBalanceando(No noAtual, int valor) {
+    private No inserirSemBalancear(No noAtual, int valor) {
         if (noAtual == null) {
             return new No(valor);
         }
 
         if (valor < noAtual.valor) {
-            noAtual.esquerda = inserirBalanceando(noAtual.esquerda, valor);
+            noAtual.esquerda = inserirSemBalancear(noAtual.esquerda, valor);
         } else if (valor > noAtual.valor) {
-            noAtual.direita = inserirBalanceando(noAtual.direita, valor);
+            noAtual.direita = inserirSemBalancear(noAtual.direita, valor);
         } else {
             return noAtual;
         }
 
         atualizarAltura(noAtual);
-        return balancearNo(noAtual);
+        return noAtual;
     }
 
     private No balancearSubarvore(No noAtual) {
@@ -89,15 +125,27 @@ public class ArvoreAVL extends ArvoreBase {
         int fator = fatorBalanceamento(noAtual);
 
         if (fator > 1) {
+            pivoBalanceamento = String.valueOf(noAtual.valor);
             if (fatorBalanceamento(noAtual.esquerda) < 0) {
+                ultimaRotacao = "Rotacao dupla esquerda-direita";
+                rotacaoUsadaNoBalanceamento = "Rotacao a esquerda e depois a direita";
                 noAtual.esquerda = rotacaoEsquerda(noAtual.esquerda);
+            } else {
+                ultimaRotacao = "Rotacao simples a direita";
+                rotacaoUsadaNoBalanceamento = "Rotacao a direita";
             }
             return rotacaoDireita(noAtual);
         }
 
         if (fator < -1) {
+            pivoBalanceamento = String.valueOf(noAtual.valor);
             if (fatorBalanceamento(noAtual.direita) > 0) {
+                ultimaRotacao = "Rotacao dupla direita-esquerda";
+                rotacaoUsadaNoBalanceamento = "Rotacao a direita e depois a esquerda";
                 noAtual.direita = rotacaoDireita(noAtual.direita);
+            } else {
+                ultimaRotacao = "Rotacao simples a esquerda";
+                rotacaoUsadaNoBalanceamento = "Rotacao a esquerda";
             }
             return rotacaoEsquerda(noAtual);
         }
