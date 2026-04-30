@@ -194,6 +194,7 @@ public class AplicacaoArvore extends JFrame {
             campoEntrada.setText("");
             campoEntrada.requestFocus();
             painelDesenho.repaint();
+            atualizarControlesAVL();
             atualizarInfo();
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Digite um numero inteiro valido!", "Erro", JOptionPane.ERROR_MESSAGE);

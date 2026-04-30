@@ -14,7 +14,7 @@ public class ArvoreAVL extends ArvoreBase {
 
     @Override
     public void inserir(int valor) {
-        raiz = inserirSemBalancear(raiz, valor);
+        raiz = inserirBalanceando(raiz, valor);
     }
 
     @Override
@@ -56,21 +56,21 @@ public class ArvoreAVL extends ArvoreBase {
         return raiz != null && raiz.esquerda != null;
     }
 
-    private No inserirSemBalancear(No noAtual, int valor) {
+    private No inserirBalanceando(No noAtual, int valor) {
         if (noAtual == null) {
             return new No(valor);
         }
 
         if (valor < noAtual.valor) {
-            noAtual.esquerda = inserirSemBalancear(noAtual.esquerda, valor);
+            noAtual.esquerda = inserirBalanceando(noAtual.esquerda, valor);
         } else if (valor > noAtual.valor) {
-            noAtual.direita = inserirSemBalancear(noAtual.direita, valor);
+            noAtual.direita = inserirBalanceando(noAtual.direita, valor);
         } else {
             return noAtual;
         }
 
         atualizarAltura(noAtual);
-        return noAtual;
+        return balancearNo(noAtual);
     }
 
     private No balancearSubarvore(No noAtual) {
@@ -82,6 +82,10 @@ public class ArvoreAVL extends ArvoreBase {
         noAtual.direita = balancearSubarvore(noAtual.direita);
         atualizarAltura(noAtual);
 
+        return balancearNo(noAtual);
+    }
+
+    private No balancearNo(No noAtual) {
         int fator = fatorBalanceamento(noAtual);
 
         if (fator > 1) {
