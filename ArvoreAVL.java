@@ -50,6 +50,34 @@ public class ArvoreAVL extends ArvoreBase {
     }
 
     @Override
+    public void rotacaoDuplaEsquerdaDireitaRaiz() {
+        ultimaRotacao = "Nenhuma";
+        rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
+        pivoBalanceamento = "Nenhum";
+        if (podeRotacionarDuplaEsquerdaDireitaRaiz()) {
+            pivoBalanceamento = String.valueOf(raiz.valor);
+            raiz.esquerda = rotacaoEsquerda(raiz.esquerda);
+            raiz = rotacaoDireita(raiz);
+            ultimaRotacao = "Rotacao dupla esquerda-direita";
+            rotacaoUsadaNoBalanceamento = "Rotacao a esquerda e depois a direita";
+        }
+    }
+
+    @Override
+    public void rotacaoDuplaDireitaEsquerdaRaiz() {
+        ultimaRotacao = "Nenhuma";
+        rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
+        pivoBalanceamento = "Nenhum";
+        if (podeRotacionarDuplaDireitaEsquerdaRaiz()) {
+            pivoBalanceamento = String.valueOf(raiz.valor);
+            raiz.direita = rotacaoDireita(raiz.direita);
+            raiz = rotacaoEsquerda(raiz);
+            ultimaRotacao = "Rotacao dupla direita-esquerda";
+            rotacaoUsadaNoBalanceamento = "Rotacao a direita e depois a esquerda";
+        }
+    }
+
+    @Override
     public int fatorBalanceamentoRaiz() {
         return fatorBalanceamento(raiz);
     }
@@ -90,6 +118,16 @@ public class ArvoreAVL extends ArvoreBase {
     @Override
     public boolean podeRotacionarDireitaRaiz() {
         return raiz != null && raiz.esquerda != null;
+    }
+
+    @Override
+    public boolean podeRotacionarDuplaEsquerdaDireitaRaiz() {
+        return raiz != null && raiz.esquerda != null && raiz.esquerda.direita != null;
+    }
+
+    @Override
+    public boolean podeRotacionarDuplaDireitaEsquerdaRaiz() {
+        return raiz != null && raiz.direita != null && raiz.direita.esquerda != null;
     }
 
     private No inserirSemBalancear(No noAtual, int valor) {

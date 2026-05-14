@@ -48,6 +48,14 @@ public abstract class ArvoreBase {
         throw new UnsupportedOperationException("Operacao disponivel apenas para AVL.");
     }
 
+    public void rotacaoDuplaEsquerdaDireitaRaiz() {
+        throw new UnsupportedOperationException("Operacao disponivel apenas para AVL.");
+    }
+
+    public void rotacaoDuplaDireitaEsquerdaRaiz() {
+        throw new UnsupportedOperationException("Operacao disponivel apenas para AVL.");
+    }
+
     public int fatorBalanceamentoRaiz() {
         return 0;
     }
@@ -77,6 +85,14 @@ public abstract class ArvoreBase {
     }
 
     public boolean podeRotacionarDireitaRaiz() {
+        return false;
+    }
+
+    public boolean podeRotacionarDuplaEsquerdaDireitaRaiz() {
+        return false;
+    }
+
+    public boolean podeRotacionarDuplaDireitaEsquerdaRaiz() {
         return false;
     }
 

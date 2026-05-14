@@ -109,6 +109,8 @@ public class AplicacaoArvore extends JFrame {
     private JButton btnBalancear;
     private JButton btnRotacaoEsquerda;
     private JButton btnRotacaoDireita;
+    private JButton btnRotacaoDuplaEsquerdaDireita;
+    private JButton btnRotacaoDuplaDireitaEsquerda;
     private JLabel labelTipoAtual;
 
     public AplicacaoArvore() {
@@ -134,12 +136,16 @@ public class AplicacaoArvore extends JFrame {
         btnBalancear = new JButton("Balancear");
         btnRotacaoEsquerda = new JButton("Rotacao Esq.");
         btnRotacaoDireita = new JButton("Rotacao Dir.");
+        btnRotacaoDuplaEsquerdaDireita = new JButton("Dupla Esq-Dir");
+        btnRotacaoDuplaDireitaEsquerda = new JButton("Dupla Dir-Esq");
         topo.add(btnInserir);
         topo.add(btnLimpar);
         topo.add(btnInverter);
         topo.add(btnBalancear);
         topo.add(btnRotacaoEsquerda);
         topo.add(btnRotacaoDireita);
+        topo.add(btnRotacaoDuplaEsquerdaDireita);
+        topo.add(btnRotacaoDuplaDireitaEsquerda);
         topo.add(btnSalvar);
         topo.add(btnCarregar);
         add(topo, BorderLayout.NORTH);
@@ -168,6 +174,8 @@ public class AplicacaoArvore extends JFrame {
 
         btnRotacaoEsquerda.addActionListener(e -> executarOperacaoAVL(() -> arvore.rotacaoSimplesEsquerdaRaiz()));
         btnRotacaoDireita.addActionListener(e -> executarOperacaoAVL(() -> arvore.rotacaoSimplesDireitaRaiz()));
+        btnRotacaoDuplaEsquerdaDireita.addActionListener(e -> executarOperacaoAVL(() -> arvore.rotacaoDuplaEsquerdaDireitaRaiz()));
+        btnRotacaoDuplaDireitaEsquerda.addActionListener(e -> executarOperacaoAVL(() -> arvore.rotacaoDuplaDireitaEsquerdaRaiz()));
         btnBalancear.addActionListener(e -> executarOperacaoAVL(() -> arvore.balancearAVL()));
 
         btnLimpar.addActionListener(e -> {
@@ -240,8 +248,14 @@ public class AplicacaoArvore extends JFrame {
             sb.append("  Rotacao a direita    : ")
                 .append(arvore.podeRotacionarDireitaRaiz() ? "disponivel" : "indisponivel")
                 .append("\n");
+            sb.append("  Rotacao dupla E-D    : ")
+                .append(arvore.podeRotacionarDuplaEsquerdaDireitaRaiz() ? "disponivel" : "indisponivel")
+                .append("\n");
+            sb.append("  Rotacao dupla D-E    : ")
+                .append(arvore.podeRotacionarDuplaDireitaEsquerdaRaiz() ? "disponivel" : "indisponivel")
+                .append("\n");
             sb.append("  Balanceamento manual  : disponivel pelo botao Balancear\n");
-            sb.append("  Rotacoes simples      : disponiveis pelos botoes da tela\n\n");
+            sb.append("  Rotacoes manuais      : disponiveis pelos botoes da tela\n\n");
         } else {
             sb.append("  Altura/Nivel : exibidos apenas no modo AVL\n\n");
         }
@@ -308,6 +322,8 @@ public class AplicacaoArvore extends JFrame {
         btnBalancear.setEnabled(isAVL);
         btnRotacaoEsquerda.setEnabled(isAVL && arvore.podeRotacionarEsquerdaRaiz());
         btnRotacaoDireita.setEnabled(isAVL && arvore.podeRotacionarDireitaRaiz());
+        btnRotacaoDuplaEsquerdaDireita.setEnabled(isAVL && arvore.podeRotacionarDuplaEsquerdaDireitaRaiz());
+        btnRotacaoDuplaDireitaEsquerda.setEnabled(isAVL && arvore.podeRotacionarDuplaDireitaEsquerdaRaiz());
     }
 
     private void executarOperacaoAVL(Runnable operacao) {
