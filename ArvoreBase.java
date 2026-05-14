@@ -72,6 +72,10 @@ public abstract class ArvoreBase {
         return "Nao aplicavel";
     }
 
+    public String historicoInsercaoAVL() {
+        return "Nao aplicavel";
+    }
+
     public void balancearAVL() {
         throw new UnsupportedOperationException("Operacao disponivel apenas para AVL.");
     }

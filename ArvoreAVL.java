@@ -1,9 +1,13 @@
 package trabalhosdeestruturadedadosavancada;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class ArvoreAVL extends ArvoreBase {
     private String ultimaRotacao = "Nenhuma";
     private String rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
     private String pivoBalanceamento = "Nenhum";
+    private final List<Integer> historicoInsercao = new ArrayList<>();
 
     @Override
     public String getNomeTipo() {
@@ -20,7 +24,17 @@ public class ArvoreAVL extends ArvoreBase {
         ultimaRotacao = "Nenhuma";
         rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
         pivoBalanceamento = "Nenhum";
+        boolean novoValor = nivelNo(valor) == -1;
         raiz = inserirSemBalancear(raiz, valor);
+        if (novoValor) {
+            historicoInsercao.add(valor);
+        }
+    }
+
+    @Override
+    public void limpar() {
+        super.limpar();
+        historicoInsercao.clear();
     }
 
     @Override
@@ -95,6 +109,19 @@ public class ArvoreAVL extends ArvoreBase {
     @Override
     public String pivoBalanceamentoAVL() {
         return pivoBalanceamento;
+    }
+
+    @Override
+    public String historicoInsercaoAVL() {
+        if (historicoInsercao.isEmpty()) {
+            return "(sem insercoes)";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int valor : historicoInsercao) {
+            sb.append(valor).append(" ");
+        }
+        return limparEspacoFinal(sb);
     }
 
     @Override
