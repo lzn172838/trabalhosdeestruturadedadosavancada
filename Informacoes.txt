@@ -1,0 +1,4 @@
+RESUMO
+Ordem de insercao: (preenchida ao salvar uma arvore pela aplicacao)
+Historico de rotacoes e pivos:
+(preenchido ao salvar uma Arvore AVL pela aplicacao)

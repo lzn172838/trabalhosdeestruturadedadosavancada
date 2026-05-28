@@ -8,6 +8,7 @@ public class ArvoreAVL extends ArvoreBase {
     private String rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
     private String pivoBalanceamento = "Nenhum";
     private final List<Integer> historicoInsercao = new ArrayList<>();
+    private final List<String> historicoRotacoes = new ArrayList<>();
 
     @Override
     public String getNomeTipo() {
@@ -25,7 +26,7 @@ public class ArvoreAVL extends ArvoreBase {
         rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
         pivoBalanceamento = "Nenhum";
         boolean novoValor = nivelNo(valor) == -1;
-        raiz = inserirSemBalancear(raiz, valor);
+        raiz = inserirBalanceando(raiz, valor);
         if (novoValor) {
             historicoInsercao.add(valor);
         }
@@ -35,6 +36,7 @@ public class ArvoreAVL extends ArvoreBase {
     public void limpar() {
         super.limpar();
         historicoInsercao.clear();
+        historicoRotacoes.clear();
     }
 
     @Override
@@ -47,6 +49,7 @@ public class ArvoreAVL extends ArvoreBase {
             raiz = rotacaoEsquerda(raiz);
             ultimaRotacao = "Rotacao simples a esquerda";
             rotacaoUsadaNoBalanceamento = "Rotacao a esquerda";
+            registrarRotacao(ultimaRotacao, pivoBalanceamento);
         }
     }
 
@@ -60,6 +63,7 @@ public class ArvoreAVL extends ArvoreBase {
             raiz = rotacaoDireita(raiz);
             ultimaRotacao = "Rotacao simples a direita";
             rotacaoUsadaNoBalanceamento = "Rotacao a direita";
+            registrarRotacao(ultimaRotacao, pivoBalanceamento);
         }
     }
 
@@ -74,6 +78,7 @@ public class ArvoreAVL extends ArvoreBase {
             raiz = rotacaoDireita(raiz);
             ultimaRotacao = "Rotacao dupla esquerda-direita";
             rotacaoUsadaNoBalanceamento = "Rotacao a esquerda e depois a direita";
+            registrarRotacao(ultimaRotacao, pivoBalanceamento);
         }
     }
 
@@ -88,6 +93,7 @@ public class ArvoreAVL extends ArvoreBase {
             raiz = rotacaoEsquerda(raiz);
             ultimaRotacao = "Rotacao dupla direita-esquerda";
             rotacaoUsadaNoBalanceamento = "Rotacao a direita e depois a esquerda";
+            registrarRotacao(ultimaRotacao, pivoBalanceamento);
         }
     }
 
@@ -113,6 +119,11 @@ public class ArvoreAVL extends ArvoreBase {
 
     @Override
     public String historicoInsercaoAVL() {
+        return ordemInsercaoResumo();
+    }
+
+    @Override
+    public String ordemInsercaoResumo() {
         if (historicoInsercao.isEmpty()) {
             return "(sem insercoes)";
         }
@@ -125,11 +136,29 @@ public class ArvoreAVL extends ArvoreBase {
     }
 
     @Override
+    public String historicoRotacoesResumo() {
+        if (historicoRotacoes.isEmpty()) {
+            return "Nenhuma rotacao realizada";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < historicoRotacoes.size(); i++) {
+            sb.append(i + 1).append(". ").append(historicoRotacoes.get(i));
+            if (i < historicoRotacoes.size() - 1) {
+                sb.append("\n");
+            }
+        }
+        return sb.toString();
+    }
+
+    @Override
     public void balancearAVL() {
         ultimaRotacao = "Nenhuma";
         rotacaoUsadaNoBalanceamento = "Nenhuma rotacao";
         pivoBalanceamento = "Nenhum";
-        raiz = balancearSubarvore(raiz);
+        while (!estaBalanceadaAVL()) {
+            raiz = balancearSubarvore(raiz);
+        }
     }
 
     @Override
@@ -139,39 +168,47 @@ public class ArvoreAVL extends ArvoreBase {
 
     @Override
     public boolean podeRotacionarEsquerdaRaiz() {
-        return raiz != null && raiz.direita != null;
+        return raiz != null
+            && fatorBalanceamento(raiz) < -1
+            && fatorBalanceamento(raiz.direita) <= 0;
     }
 
     @Override
     public boolean podeRotacionarDireitaRaiz() {
-        return raiz != null && raiz.esquerda != null;
+        return raiz != null
+            && fatorBalanceamento(raiz) > 1
+            && fatorBalanceamento(raiz.esquerda) >= 0;
     }
 
     @Override
     public boolean podeRotacionarDuplaEsquerdaDireitaRaiz() {
-        return raiz != null && raiz.esquerda != null && raiz.esquerda.direita != null;
+        return raiz != null
+            && fatorBalanceamento(raiz) > 1
+            && fatorBalanceamento(raiz.esquerda) < 0;
     }
 
     @Override
     public boolean podeRotacionarDuplaDireitaEsquerdaRaiz() {
-        return raiz != null && raiz.direita != null && raiz.direita.esquerda != null;
+        return raiz != null
+            && fatorBalanceamento(raiz) < -1
+            && fatorBalanceamento(raiz.direita) > 0;
     }
 
-    private No inserirSemBalancear(No noAtual, int valor) {
+    private No inserirBalanceando(No noAtual, int valor) {
         if (noAtual == null) {
             return new No(valor);
         }
 
         if (valor < noAtual.valor) {
-            noAtual.esquerda = inserirSemBalancear(noAtual.esquerda, valor);
+            noAtual.esquerda = inserirBalanceando(noAtual.esquerda, valor);
         } else if (valor > noAtual.valor) {
-            noAtual.direita = inserirSemBalancear(noAtual.direita, valor);
+            noAtual.direita = inserirBalanceando(noAtual.direita, valor);
         } else {
             return noAtual;
         }
 
         atualizarAltura(noAtual);
-        return noAtual;
+        return balancearNo(noAtual);
     }
 
     private No balancearSubarvore(No noAtual) {
@@ -194,10 +231,12 @@ public class ArvoreAVL extends ArvoreBase {
             if (fatorBalanceamento(noAtual.esquerda) < 0) {
                 ultimaRotacao = "Rotacao dupla esquerda-direita";
                 rotacaoUsadaNoBalanceamento = "Rotacao a esquerda e depois a direita";
+                registrarRotacao(ultimaRotacao, pivoBalanceamento);
                 noAtual.esquerda = rotacaoEsquerda(noAtual.esquerda);
             } else {
                 ultimaRotacao = "Rotacao simples a direita";
                 rotacaoUsadaNoBalanceamento = "Rotacao a direita";
+                registrarRotacao(ultimaRotacao, pivoBalanceamento);
             }
             return rotacaoDireita(noAtual);
         }
@@ -207,10 +246,12 @@ public class ArvoreAVL extends ArvoreBase {
             if (fatorBalanceamento(noAtual.direita) > 0) {
                 ultimaRotacao = "Rotacao dupla direita-esquerda";
                 rotacaoUsadaNoBalanceamento = "Rotacao a direita e depois a esquerda";
+                registrarRotacao(ultimaRotacao, pivoBalanceamento);
                 noAtual.direita = rotacaoDireita(noAtual.direita);
             } else {
                 ultimaRotacao = "Rotacao simples a esquerda";
                 rotacaoUsadaNoBalanceamento = "Rotacao a esquerda";
+                registrarRotacao(ultimaRotacao, pivoBalanceamento);
             }
             return rotacaoEsquerda(noAtual);
         }
@@ -267,5 +308,9 @@ public class ArvoreAVL extends ArvoreBase {
             return 0;
         }
         return alturaInterna(no.esquerda) - alturaInterna(no.direita);
+    }
+
+    private void registrarRotacao(String rotacao, String pivo) {
+        historicoRotacoes.add(rotacao + " | Pivo: " + pivo);
     }
 }

@@ -349,7 +349,7 @@ public class AplicacaoArvore extends JFrame {
 
         JFileChooser fc = new JFileChooser();
         fc.setDialogTitle("Salvar Arvore");
-        fc.setSelectedFile(new File("arvore.txt"));
+        fc.setSelectedFile(new File("Salvar.txt"));
         if (fc.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
 
         File arquivo = fc.getSelectedFile();
@@ -359,6 +359,11 @@ public class AplicacaoArvore extends JFrame {
 
         try (FileWriter fw = new FileWriter(arquivo)) {
             fw.write(arvore.getNomeTipo().toUpperCase() + "\n");
+            fw.write("=".repeat(50) + "\n\n");
+            fw.write("RESUMO\n");
+            fw.write("Ordem de insercao: " + arvore.ordemInsercaoResumo() + "\n");
+            fw.write("Historico de rotacoes e pivos:\n");
+            fw.write(arvore.historicoRotacoesResumo() + "\n\n");
             fw.write("=".repeat(50) + "\n\n");
             fw.write(areaInfo.getText());
             JOptionPane.showMessageDialog(this, "Salvo em:\n" + arquivo.getAbsolutePath(), "OK", JOptionPane.INFORMATION_MESSAGE);
