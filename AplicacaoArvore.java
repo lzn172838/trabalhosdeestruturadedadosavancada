@@ -243,6 +243,8 @@ public class AplicacaoArvore extends JFrame {
             sb.append("  Rotacao atual         : ").append(arvore.rotacaoUsadaNoBalanceamentoAVL()).append("\n");
             sb.append("  Pivo AVL              : ").append(arvore.pivoBalanceamentoAVL()).append("\n");
             sb.append("  Historico insercao    : ").append(arvore.historicoInsercaoAVL()).append("\n");
+            sb.append("  Historico rotacoes:\n");
+            sb.append(arvore.historicoRotacoesResumo()).append("\n");
             sb.append("  Rotacao a esquerda   : ")
                 .append(arvore.podeRotacionarEsquerdaRaiz() ? "disponivel" : "indisponivel")
                 .append("\n");
