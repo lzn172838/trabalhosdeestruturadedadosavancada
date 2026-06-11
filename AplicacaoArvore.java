@@ -85,7 +85,14 @@ class PainelDesenhoArvore extends JPanel {
             desenhar(g, no.direita, offsetX, offsetY);
         }
 
-        g.setColor(Color.WHITE);
+        String corNo = arvore.corNo(no);
+        if ("VERMELHO".equals(corNo)) {
+            g.setColor(new Color(205, 40, 40));
+        } else if ("PRETO".equals(corNo)) {
+            g.setColor(new Color(35, 35, 35));
+        } else {
+            g.setColor(Color.WHITE);
+        }
         g.fillOval(x - RAIO, y - RAIO, 2 * RAIO, 2 * RAIO);
         g.setColor(Color.BLACK);
         g.setStroke(new BasicStroke(2));
@@ -93,6 +100,7 @@ class PainelDesenhoArvore extends JPanel {
 
         String txt = String.valueOf(no.valor);
         FontMetrics fm = g.getFontMetrics();
+        g.setColor(("VERMELHO".equals(corNo) || "PRETO".equals(corNo)) ? Color.WHITE : Color.BLACK);
         g.drawString(txt, x - fm.stringWidth(txt) / 2, y + fm.getAscent() / 4);
     }
 }
@@ -101,8 +109,11 @@ class PainelDesenhoArvore extends JPanel {
 public class AplicacaoArvore extends JFrame {
 
     private ArvoreBase arvore = new ArvoreBinBusca();
+    private ArvoreBase arvoreComparacaoRedBlack = new ArvoreRedBlack();
     private JTextField campoEntrada;
     private PainelDesenhoArvore painelDesenho;
+    private PainelDesenhoArvore painelDesenhoComparacao;
+    private JPanel centroDesenho;
     private JTextArea areaInfo;
     private JComboBox<String> comboTipoArvore;
     private JButton btnInverter;
@@ -114,14 +125,19 @@ public class AplicacaoArvore extends JFrame {
     private JLabel labelTipoAtual;
 
     public AplicacaoArvore() {
-        setTitle("Arvore Binaria de Busca e AVL");
+        setTitle("Arvore Binaria de Busca, AVL e Red-Black");
         setSize(950, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout(5, 5));
 
         JPanel topo = new JPanel(new FlowLayout(FlowLayout.LEFT));
         topo.add(new JLabel("Estrutura:"));
-        comboTipoArvore = new JComboBox<>(new String[]{"Arvore Binaria de Busca", "Arvore AVL"});
+        comboTipoArvore = new JComboBox<>(new String[]{
+            "Arvore Binaria de Busca",
+            "Arvore AVL",
+            "Arvore AVL Red-Black",
+            "AVL e AVL Red-Black simultaneas"
+        });
         topo.add(comboTipoArvore);
 
         topo.add(new JLabel("Numero:"));
@@ -151,8 +167,10 @@ public class AplicacaoArvore extends JFrame {
         add(topo, BorderLayout.NORTH);
 
         painelDesenho = new PainelDesenhoArvore(arvore);
-        JScrollPane scrollDesenho = new JScrollPane(painelDesenho);
-        add(scrollDesenho, BorderLayout.CENTER);
+        painelDesenhoComparacao = new PainelDesenhoArvore(arvoreComparacaoRedBlack);
+        centroDesenho = new JPanel(new BorderLayout());
+        add(centroDesenho, BorderLayout.CENTER);
+        atualizarPainelDesenhoModo();
 
         areaInfo = new JTextArea(10, 40);
         areaInfo.setEditable(false);
@@ -180,7 +198,9 @@ public class AplicacaoArvore extends JFrame {
 
         btnLimpar.addActionListener(e -> {
             arvore.limpar();
+            arvoreComparacaoRedBlack.limpar();
             painelDesenho.repaint();
+            painelDesenhoComparacao.repaint();
             atualizarInfo();
         });
 
@@ -194,14 +214,46 @@ public class AplicacaoArvore extends JFrame {
         atualizarInfo();
     }
 
+    private boolean modoComparativo() {
+        return "AVL e AVL Red-Black simultaneas".equals(comboTipoArvore.getSelectedItem());
+    }
+
+    private void atualizarPainelDesenhoModo() {
+        centroDesenho.removeAll();
+
+        if (modoComparativo()) {
+            JPanel comparativo = new JPanel(new GridLayout(1, 2, 5, 5));
+            comparativo.add(criarPainelComTitulo("Arvore AVL", painelDesenho));
+            comparativo.add(criarPainelComTitulo("Arvore AVL Red-Black", painelDesenhoComparacao));
+            centroDesenho.add(comparativo, BorderLayout.CENTER);
+        } else {
+            centroDesenho.add(new JScrollPane(painelDesenho), BorderLayout.CENTER);
+        }
+
+        centroDesenho.revalidate();
+        centroDesenho.repaint();
+    }
+
+    private JPanel criarPainelComTitulo(String titulo, PainelDesenhoArvore painel) {
+        JPanel container = new JPanel(new BorderLayout());
+        container.setBorder(BorderFactory.createTitledBorder(titulo));
+        container.add(new JScrollPane(painel), BorderLayout.CENTER);
+        return container;
+    }
+
     private void inserir() {
         try {
             String txt = campoEntrada.getText().trim();
             if (txt.isEmpty()) return;
-            arvore.inserir(Integer.parseInt(txt));
+            int valor = Integer.parseInt(txt);
+            arvore.inserir(valor);
+            if (modoComparativo()) {
+                arvoreComparacaoRedBlack.inserir(valor);
+            }
             campoEntrada.setText("");
             campoEntrada.requestFocus();
             painelDesenho.repaint();
+            painelDesenhoComparacao.repaint();
             atualizarControlesAVL();
             atualizarInfo();
         } catch (NumberFormatException ex) {
@@ -211,8 +263,14 @@ public class AplicacaoArvore extends JFrame {
     }
 
     private void atualizarInfo() {
+        if (modoComparativo()) {
+            atualizarInfoComparativa();
+            return;
+        }
+
         if (arvore.getRaiz() == null) {
             areaInfo.setText("  (" + arvore.getNomeTipo() + " vazia)");
+            labelTipoAtual.setText("  Modo atual: " + arvore.getNomeTipo() + "  ");
             return;
         }
 
@@ -259,8 +317,22 @@ public class AplicacaoArvore extends JFrame {
                 .append("\n");
             sb.append("  Balanceamento manual  : disponivel pelo botao Balancear\n");
             sb.append("  Rotacoes manuais      : disponiveis pelos botoes da tela\n\n");
+        } else if (arvore.suportaOperacoesRedBlack()) {
+            sb.append("  Altura     : ").append(arvore.alturaArvore()).append("\n");
+            sb.append("  Nivel      : ").append(arvore.nivelArvore()).append("\n");
+            sb.append("  Profundidade: ").append(arvore.profundidadeArvore()).append("\n\n");
+
+            sb.append("Red-Black:\n");
+            sb.append("  Estado               : ")
+                .append(arvore.estaValidaRedBlack() ? "Valida" : "Com violacao")
+                .append("\n");
+            sb.append("  Cor da raiz          : ").append(arvore.corNo(arvore.getRaiz())).append("\n");
+            sb.append("  Altura negra         : ").append(arvore.alturaNegraRedBlack()).append("\n");
+            sb.append("  Historico insercao   : ").append(arvore.ordemInsercaoResumo()).append("\n");
+            sb.append("  Historico ajustes:\n");
+            sb.append(arvore.historicoBalanceamentoRedBlack()).append("\n\n");
         } else {
-            sb.append("  Altura/Nivel : exibidos apenas no modo AVL\n\n");
+            sb.append("  Altura/Nivel : exibidos nos modos AVL e Red-Black\n\n");
         }
 
         int[] info21 = buscarNo(arvore.getRaiz(), 21, 0);
@@ -273,15 +345,63 @@ public class AplicacaoArvore extends JFrame {
             sb.append("  (nao encontrado na arvore)\n\n");
         }
 
-        if (arvore.suportaOperacoesAVL()) {
-            sb.append(String.format("  %-8s  %-8s  %-14s  %-8s%n", "No", "Nivel", "Profundidade", "Altura"));
-            sb.append("  ").append("-".repeat(44)).append("\n");
+        if (arvore.suportaOperacoesAVL() || arvore.suportaOperacoesRedBlack()) {
+            sb.append(String.format("  %-8s  %-8s  %-14s  %-8s  %-10s%n", "No", "Nivel", "Profundidade", "Altura", "Cor"));
+            sb.append("  ").append("-".repeat(58)).append("\n");
             montarTabelaNos(arvore.getRaiz(), 0, sb);
         }
 
         areaInfo.setText(sb.toString());
         areaInfo.setCaretPosition(0);
         labelTipoAtual.setText("  Modo atual: " + arvore.getNomeTipo() + "  ");
+    }
+
+    private void atualizarInfoComparativa() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Modo atual: AVL e AVL Red-Black simultaneas\n\n");
+        sb.append(resumoArvoreComparativa(arvore));
+        sb.append("\n").append("=".repeat(70)).append("\n\n");
+        sb.append(resumoArvoreComparativa(arvoreComparacaoRedBlack));
+
+        areaInfo.setText(sb.toString());
+        areaInfo.setCaretPosition(0);
+        labelTipoAtual.setText("  Modo atual: AVL + AVL Red-Black  ");
+    }
+
+    private String resumoArvoreComparativa(ArvoreBase arvoreResumo) {
+        if (arvoreResumo.getRaiz() == null) {
+            return arvoreResumo.getNomeTipo() + " vazia\n";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Estrutura: ").append(arvoreResumo.getNomeTipo()).append("\n");
+        sb.append("Parenteses Aninhados: ").append(arvoreResumo.parentesesAninhados()).append("\n");
+        sb.append("Pre-Ordem : ").append(arvoreResumo.preOrdem()).append("\n");
+        sb.append("Em Ordem  : ").append(arvoreResumo.emOrdem()).append("\n");
+        sb.append("Pos-Ordem : ").append(arvoreResumo.posOrdem()).append("\n");
+        sb.append("Altura    : ").append(arvoreResumo.alturaArvore()).append("\n");
+        sb.append("Tipo      : ").append(arvoreResumo.tipoArvore()).append("\n");
+
+        if (arvoreResumo.suportaOperacoesAVL()) {
+            sb.append("Estado AVL: ")
+                .append(arvoreResumo.estaBalanceadaAVL() ? "Balanceada" : "Nao balanceada")
+                .append("\n");
+            sb.append("Ultima rotacao: ").append(arvoreResumo.ultimaRotacaoAVL()).append("\n");
+            sb.append("Historico rotacoes:\n").append(arvoreResumo.historicoRotacoesResumo()).append("\n");
+        } else if (arvoreResumo.suportaOperacoesRedBlack()) {
+            sb.append("Estado Red-Black: ")
+                .append(arvoreResumo.estaValidaRedBlack() ? "Valida" : "Com violacao")
+                .append("\n");
+            sb.append("Cor da raiz: ").append(arvoreResumo.corNo(arvoreResumo.getRaiz())).append("\n");
+            sb.append("Altura negra: ").append(arvoreResumo.alturaNegraRedBlack()).append("\n");
+            sb.append("Historico ajustes:\n").append(arvoreResumo.historicoBalanceamentoRedBlack()).append("\n");
+        }
+
+        sb.append("Ordem de insercao: ").append(arvoreResumo.ordemInsercaoResumo()).append("\n\n");
+        sb.append(String.format("  %-8s  %-8s  %-14s  %-8s  %-10s%n", "No", "Nivel", "Profundidade", "Altura", "Cor"));
+        sb.append("  ").append("-".repeat(58)).append("\n");
+        montarTabelaNos(arvoreResumo, arvoreResumo.getRaiz(), 0, sb);
+        return sb.toString();
     }
 
     private int[] buscarNo(ArvoreBase.No no, int valor, int nivel) {
@@ -293,35 +413,50 @@ public class AplicacaoArvore extends JFrame {
     }
 
     private void montarTabelaNos(ArvoreBase.No no, int nivel, StringBuilder sb) {
+        montarTabelaNos(arvore, no, nivel, sb);
+    }
+
+    private void montarTabelaNos(ArvoreBase arvoreTabela, ArvoreBase.No no, int nivel, StringBuilder sb) {
         if (no == null) return;
-        int altura = arvore.alturaNo(no);
-        sb.append(String.format("  %-8d  %-8d  %-14d  %-8d%n", no.valor, nivel, nivel, altura));
-        montarTabelaNos(no.esquerda, nivel + 1, sb);
-        montarTabelaNos(no.direita,  nivel + 1, sb);
+        int altura = arvoreTabela.alturaNo(no);
+        sb.append(String.format("  %-8d  %-8d  %-14d  %-8d  %-10s%n",
+            no.valor, nivel, nivel, altura, arvoreTabela.corNo(no)));
+        montarTabelaNos(arvoreTabela, no.esquerda, nivel + 1, sb);
+        montarTabelaNos(arvoreTabela, no.direita,  nivel + 1, sb);
     }
 
     private void trocarTipoArvore() {
         String preOrdemAtual = arvore.preOrdem();
-        if ("Arvore AVL".equals(comboTipoArvore.getSelectedItem())) {
+        String selecionado = String.valueOf(comboTipoArvore.getSelectedItem());
+        if ("Arvore AVL".equals(selecionado) || "AVL e AVL Red-Black simultaneas".equals(selecionado)) {
             arvore = new ArvoreAVL();
+        } else if ("Arvore AVL Red-Black".equals(selecionado)) {
+            arvore = new ArvoreRedBlack();
         } else {
             arvore = new ArvoreBinBusca();
         }
 
+        arvoreComparacaoRedBlack = new ArvoreRedBlack();
         if (!preOrdemAtual.isEmpty()) {
             for (String token : preOrdemAtual.split("\\s+")) {
-                arvore.inserir(Integer.parseInt(token));
+                int valor = Integer.parseInt(token);
+                arvore.inserir(valor);
+                if ("AVL e AVL Red-Black simultaneas".equals(selecionado)) {
+                    arvoreComparacaoRedBlack.inserir(valor);
+                }
             }
         }
 
         painelDesenho.setArvore(arvore);
+        painelDesenhoComparacao.setArvore(arvoreComparacaoRedBlack);
+        atualizarPainelDesenhoModo();
         atualizarControlesAVL();
         atualizarInfo();
     }
 
     private void atualizarControlesAVL() {
-        boolean isAVL = arvore.suportaOperacoesAVL();
-        btnInverter.setEnabled(!isAVL);
+        boolean isAVL = arvore.suportaOperacoesAVL() && !modoComparativo();
+        btnInverter.setEnabled(!arvore.suportaOperacoesAVL() && !arvore.suportaOperacoesRedBlack() && !modoComparativo());
         btnBalancear.setEnabled(isAVL);
         btnRotacaoEsquerda.setEnabled(isAVL && arvore.podeRotacionarEsquerdaRaiz());
         btnRotacaoDireita.setEnabled(isAVL && arvore.podeRotacionarDireitaRaiz());
@@ -330,9 +465,9 @@ public class AplicacaoArvore extends JFrame {
     }
 
     private void executarOperacaoAVL(Runnable operacao) {
-        if (!arvore.suportaOperacoesAVL()) {
+        if (!arvore.suportaOperacoesAVL() || modoComparativo()) {
             JOptionPane.showMessageDialog(this,
-                "Esses metodos estao disponiveis apenas para a AVL.",
+                "Esses metodos estao disponiveis apenas para a AVL individual.",
                 "Aviso", JOptionPane.WARNING_MESSAGE);
             return;
         }
@@ -360,12 +495,19 @@ public class AplicacaoArvore extends JFrame {
         }
 
         try (FileWriter fw = new FileWriter(arquivo)) {
-            fw.write(arvore.getNomeTipo().toUpperCase() + "\n");
+            fw.write(String.valueOf(comboTipoArvore.getSelectedItem()).toUpperCase() + "\n");
             fw.write("=".repeat(50) + "\n\n");
             fw.write("RESUMO\n");
             fw.write("Ordem de insercao: " + arvore.ordemInsercaoResumo() + "\n");
-            fw.write("Historico de rotacoes e pivos:\n");
+            fw.write("Historico AVL de rotacoes e pivos:\n");
             fw.write(arvore.historicoRotacoesResumo() + "\n\n");
+            fw.write("Historico Red-Black de ajustes:\n");
+            fw.write(arvore.historicoBalanceamentoRedBlack() + "\n\n");
+            if (modoComparativo()) {
+                fw.write("Comparacao Red-Black - ordem de insercao: "
+                    + arvoreComparacaoRedBlack.ordemInsercaoResumo() + "\n");
+                fw.write(arvoreComparacaoRedBlack.historicoBalanceamentoRedBlack() + "\n\n");
+            }
             fw.write("=".repeat(50) + "\n\n");
             fw.write(areaInfo.getText());
             JOptionPane.showMessageDialog(this, "Salvo em:\n" + arquivo.getAbsolutePath(), "OK", JOptionPane.INFORMATION_MESSAGE);
@@ -410,15 +552,23 @@ public class AplicacaoArvore extends JFrame {
 
             definirEstruturaPorTexto(tipoEstrutura);
             arvore.limpar();
+            arvoreComparacaoRedBlack.limpar();
             for (String token : preOrdem.split("\\s+")) {
                 if (!token.isEmpty()) {
-                    arvore.inserir(Integer.parseInt(token));
+                    int valor = Integer.parseInt(token);
+                    arvore.inserir(valor);
+                    if (modoComparativo()) {
+                        arvoreComparacaoRedBlack.inserir(valor);
+                    }
                 }
             }
 
             painelDesenho.setArvore(arvore);
+            painelDesenhoComparacao.setArvore(arvoreComparacaoRedBlack);
+            atualizarPainelDesenhoModo();
             atualizarControlesAVL();
             painelDesenho.repaint();
+            painelDesenhoComparacao.repaint();
             atualizarInfo();
             JOptionPane.showMessageDialog(this,
                 "Arvore carregada com sucesso!", "OK", JOptionPane.INFORMATION_MESSAGE);
@@ -435,7 +585,15 @@ public class AplicacaoArvore extends JFrame {
     }
 
     private void definirEstruturaPorTexto(String tipoEstrutura) {
-        if (tipoEstrutura != null && tipoEstrutura.toUpperCase().contains("AVL")) {
+        String tipo = tipoEstrutura == null ? "" : tipoEstrutura.toUpperCase();
+        if (tipo.contains("SIMULTANE")) {
+            comboTipoArvore.setSelectedItem("AVL e AVL Red-Black simultaneas");
+            arvore = new ArvoreAVL();
+            arvoreComparacaoRedBlack = new ArvoreRedBlack();
+        } else if (tipo.contains("RED-BLACK")) {
+            comboTipoArvore.setSelectedItem("Arvore AVL Red-Black");
+            arvore = new ArvoreRedBlack();
+        } else if (tipo.contains("AVL")) {
             comboTipoArvore.setSelectedItem("Arvore AVL");
             arvore = new ArvoreAVL();
         } else {

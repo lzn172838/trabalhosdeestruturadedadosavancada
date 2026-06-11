@@ -40,6 +40,26 @@ public abstract class ArvoreBase {
         return false;
     }
 
+    public boolean suportaOperacoesRedBlack() {
+        return false;
+    }
+
+    public String corNo(No no) {
+        return "BRANCO";
+    }
+
+    public String historicoBalanceamentoRedBlack() {
+        return "Nao aplicavel";
+    }
+
+    public boolean estaValidaRedBlack() {
+        return true;
+    }
+
+    public int alturaNegraRedBlack() {
+        return 0;
+    }
+
     public void rotacaoSimplesEsquerdaRaiz() {
         throw new UnsupportedOperationException("Operacao disponivel apenas para AVL.");
     }
