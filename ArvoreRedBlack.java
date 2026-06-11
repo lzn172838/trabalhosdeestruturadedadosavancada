@@ -11,6 +11,7 @@ public class ArvoreRedBlack extends ArvoreBase {
     private final List<String> historicoBalanceamento = new ArrayList<>();
 
     private static class NoRB extends No {
+        NoRB pai;
         boolean vermelho;
 
         NoRB(int valor) {
@@ -31,12 +32,37 @@ public class ArvoreRedBlack extends ArvoreBase {
 
     @Override
     public void inserir(int valor) {
-        boolean novoValor = nivelNo(valor) == -1;
-        raiz = inserirBalanceando((NoRB) raiz, valor);
-        ((NoRB) raiz).vermelho = PRETO;
-        if (novoValor) {
+        if (raiz == null) {
+            raiz = new NoRB(valor);
+            ((NoRB) raiz).vermelho = PRETO;
             historicoInsercao.add(valor);
+            return;
         }
+
+        NoRB atual = (NoRB) raiz;
+        NoRB pai = null;
+
+        while (atual != null) {
+            pai = atual;
+            if (valor < atual.valor) {
+                atual = (NoRB) atual.esquerda;
+            } else if (valor > atual.valor) {
+                atual = (NoRB) atual.direita;
+            } else {
+                return;
+            }
+        }
+
+        NoRB novo = new NoRB(valor);
+        novo.pai = pai;
+        if (valor < pai.valor) {
+            pai.esquerda = novo;
+        } else {
+            pai.direita = novo;
+        }
+
+        historicoInsercao.add(valor);
+        corrigirInsercao(novo);
     }
 
     @Override
@@ -48,7 +74,7 @@ public class ArvoreRedBlack extends ArvoreBase {
 
     @Override
     public String corNo(No no) {
-        if (no instanceof NoRB && ((NoRB) no).vermelho) {
+        if (ehVermelho(no)) {
             return "VERMELHO";
         }
         return "PRETO";
@@ -98,76 +124,96 @@ public class ArvoreRedBlack extends ArvoreBase {
         return Math.max(0, alturaNegra(raiz));
     }
 
-    private NoRB inserirBalanceando(NoRB noAtual, int valor) {
-        if (noAtual == null) {
-            return new NoRB(valor);
+    private void corrigirInsercao(NoRB no) {
+        while (no != raiz && ehVermelho(no.pai)) {
+            NoRB pai = no.pai;
+            NoRB avo = pai.pai;
+
+            if (pai == avo.esquerda) {
+                NoRB tio = (NoRB) avo.direita;
+                if (ehVermelho(tio)) {
+                    pai.vermelho = PRETO;
+                    tio.vermelho = PRETO;
+                    avo.vermelho = VERMELHO;
+                    historicoBalanceamento.add("Recoloracao | Avo: " + avo.valor);
+                    no = avo;
+                } else {
+                    if (no == pai.direita) {
+                        no = pai;
+                        rotacaoEsquerda(no);
+                    }
+                    no.pai.vermelho = PRETO;
+                    no.pai.pai.vermelho = VERMELHO;
+                    rotacaoDireita(no.pai.pai);
+                }
+            } else {
+                NoRB tio = (NoRB) avo.esquerda;
+                if (ehVermelho(tio)) {
+                    pai.vermelho = PRETO;
+                    tio.vermelho = PRETO;
+                    avo.vermelho = VERMELHO;
+                    historicoBalanceamento.add("Recoloracao | Avo: " + avo.valor);
+                    no = avo;
+                } else {
+                    if (no == pai.esquerda) {
+                        no = pai;
+                        rotacaoDireita(no);
+                    }
+                    no.pai.vermelho = PRETO;
+                    no.pai.pai.vermelho = VERMELHO;
+                    rotacaoEsquerda(no.pai.pai);
+                }
+            }
         }
 
-        if (valor < noAtual.valor) {
-            noAtual.esquerda = inserirBalanceando((NoRB) noAtual.esquerda, valor);
-        } else if (valor > noAtual.valor) {
-            noAtual.direita = inserirBalanceando((NoRB) noAtual.direita, valor);
+        ((NoRB) raiz).vermelho = PRETO;
+        recalcularAlturas(raiz);
+    }
+
+    private void rotacaoEsquerda(NoRB x) {
+        NoRB y = (NoRB) x.direita;
+        x.direita = y.esquerda;
+        if (y.esquerda != null) {
+            ((NoRB) y.esquerda).pai = x;
+        }
+
+        y.pai = x.pai;
+        if (x.pai == null) {
+            raiz = y;
+        } else if (x == x.pai.esquerda) {
+            x.pai.esquerda = y;
         } else {
-            return noAtual;
+            x.pai.direita = y;
         }
 
-        if (ehVermelho(noAtual.direita) && !ehVermelho(noAtual.esquerda)) {
-            noAtual = rotacaoEsquerda(noAtual);
-        }
-        if (ehVermelho(noAtual.esquerda) && ehVermelho(noAtual.esquerda.esquerda)) {
-            noAtual = rotacaoDireita(noAtual);
-        }
-        if (ehVermelho(noAtual.esquerda) && ehVermelho(noAtual.direita)) {
-            inverterCores(noAtual);
-        }
-
-        atualizarAltura(noAtual);
-        return noAtual;
+        y.esquerda = x;
+        x.pai = y;
+        historicoBalanceamento.add("Rotacao a esquerda | Pivo: " + x.valor);
     }
 
-    private NoRB rotacaoEsquerda(NoRB h) {
-        NoRB x = (NoRB) h.direita;
-        h.direita = x.esquerda;
-        x.esquerda = h;
-        x.vermelho = h.vermelho;
-        h.vermelho = VERMELHO;
-        atualizarAltura(h);
-        atualizarAltura(x);
-        historicoBalanceamento.add("Rotacao a esquerda | Pivo: " + h.valor);
-        return x;
-    }
+    private void rotacaoDireita(NoRB y) {
+        NoRB x = (NoRB) y.esquerda;
+        y.esquerda = x.direita;
+        if (x.direita != null) {
+            ((NoRB) x.direita).pai = y;
+        }
 
-    private NoRB rotacaoDireita(NoRB h) {
-        NoRB x = (NoRB) h.esquerda;
-        h.esquerda = x.direita;
-        x.direita = h;
-        x.vermelho = h.vermelho;
-        h.vermelho = VERMELHO;
-        atualizarAltura(h);
-        atualizarAltura(x);
-        historicoBalanceamento.add("Rotacao a direita | Pivo: " + h.valor);
-        return x;
-    }
+        x.pai = y.pai;
+        if (y.pai == null) {
+            raiz = x;
+        } else if (y == y.pai.direita) {
+            y.pai.direita = x;
+        } else {
+            y.pai.esquerda = x;
+        }
 
-    private void inverterCores(NoRB h) {
-        h.vermelho = !h.vermelho;
-        ((NoRB) h.esquerda).vermelho = !((NoRB) h.esquerda).vermelho;
-        ((NoRB) h.direita).vermelho = !((NoRB) h.direita).vermelho;
-        historicoBalanceamento.add("Inversao de cores | Pivo: " + h.valor);
+        x.direita = y;
+        y.pai = x;
+        historicoBalanceamento.add("Rotacao a direita | Pivo: " + y.valor);
     }
 
     private boolean ehVermelho(No no) {
         return no instanceof NoRB && ((NoRB) no).vermelho;
-    }
-
-    private void atualizarAltura(No no) {
-        if (no != null) {
-            no.altura = 1 + Math.max(alturaInterna(no.esquerda), alturaInterna(no.direita));
-        }
-    }
-
-    private int alturaInterna(No no) {
-        return no == null ? -1 : no.altura;
     }
 
     private boolean temDoisVermelhosSeguidos(No no) {
@@ -193,5 +239,13 @@ public class ArvoreRedBlack extends ArvoreBase {
         }
 
         return esquerda + (ehVermelho(no) ? 0 : 1);
+    }
+
+    private int recalcularAlturas(No no) {
+        if (no == null) {
+            return -1;
+        }
+        no.altura = 1 + Math.max(recalcularAlturas(no.esquerda), recalcularAlturas(no.direita));
+        return no.altura;
     }
 }
